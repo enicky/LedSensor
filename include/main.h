@@ -8,7 +8,7 @@
 #define ARRAY_SIZE(A) (sizeof(A) / sizeof((A)[0]))
 
 #ifdef USE_LEDS
-#define NUM_LEDS 1
+#define NUM_LEDS 12
 #define DATA_PIN D4
 #define COLOR_ORDER GRB
 #define MILLI_AMPS 2000

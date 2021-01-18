@@ -23,7 +23,7 @@
 
 #define USE_LEDS
 #define DEBUG
-//#define BME_ENABLED
+#define BME_ENABLED
 
 #ifdef BME_ENABLED
 #include "sensorservice.h"
@@ -111,14 +111,6 @@ void loop()
   webServer.handleClient();
   MDNS.update();
   ArduinoOTA.handle();
-  if (power == 0)
-  {
-    //if no power => do not handle the rest
-    fill_solid(leds, NUM_LEDS, CRGB::Black);
-    FastLED.show();
-    delay(1000 / FRAMES_PER_SECOND);
-    return;
-  }
 
 #ifdef BME_ENABLED
   EVERY_N_SECONDS(60)
@@ -147,6 +139,15 @@ void loop()
     gHue++; // slowly cycle the "base color" through the rainbow
   }
 
+  if (power == 0)
+  {
+    //if no power => do not handle the rest
+    fill_solid(leds, NUM_LEDS, CRGB::Black);
+    FastLED.show();
+    delay(1000 / FRAMES_PER_SECOND);
+    return;
+  }
+  
   //Serial.print("[main] Calling pattern on currentPatternIndex: ");
   //Serial.println(currentPatternIndex);
   patterns[currentPatternIndex].pattern();
@@ -196,6 +197,7 @@ void prepareWebServer(char nameChar[])
 
   webServer.on("/on", HTTP_GET, []() {
     Serial.println("Turn Lights On");
+    setPower(1);
     fill_solid(leds, NUM_LEDS, CRGB::White);
     FastLED.show();
     webServer.sendHeader("Access-Control-Allow-Origin", "*");
@@ -204,7 +206,7 @@ void prepareWebServer(char nameChar[])
 
   webServer.on("/off", HTTP_GET, []() {
     Serial.println("Turn Lights OFF");
-
+    setPower(0);
     fill_solid(leds, NUM_LEDS, CRGB::Black);
     FastLED.show();
     webServer.sendHeader("Access-Control-Allow-Origin", "*");
@@ -219,7 +221,10 @@ void prepareWebServer(char nameChar[])
     if (intValue > 255)
       intValue = 255;
     FastLED.setBrightness(intValue);
-    FastLED.show();
+    //FastLED.show();
+
+    webServer.sendHeader("Access-Control-Allow-Origin","*");
+    webServer.send(200, "application/json", "{\"success\": true, \"value\":" + value + "}");
   });
 
   webServer.on("/power", HTTP_POST, []() {
